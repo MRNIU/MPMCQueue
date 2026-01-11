@@ -13,6 +13,7 @@ A C++26 Multi-Producer Multi-Consumer (MPMC) lock-free queue implementation for 
 - ✅ **多生产者多消费者** - 支持任意数量的生产者和消费者线程
 - ✅ **Header-only** - 仅头文件库，易于集成
 - ✅ **类型安全** - 完全的模板化实现，支持任意类型
+- ✅ **STL 风格接口** - 提供类似于 STL 容器的接口
 
 ---
 
@@ -23,6 +24,7 @@ A C++26 Multi-Producer Multi-Consumer (MPMC) lock-free queue implementation for 
 - ✅ **Multi-producer multi-consumer** - Supports any number of producer and consumer threads
 - ✅ **Header-only** - Easy to integrate
 - ✅ **Type-safe** - Fully templated implementation supporting any type
+- ✅ **STL-like Interface** - Provides interface similar to STL containers
 
 ## 要求 (Requirements)
 
@@ -45,22 +47,22 @@ A C++26 Multi-Producer Multi-Consumer (MPMC) lock-free queue implementation for 
 ### 基本示例 (Basic Example)
 
 ```cpp
-#include <mpmc_queue.hpp>
+#include <MPMCQueue.hpp>
 
 int main() {
     // 创建一个容量为 256 的队列（必须是 2 的幂）
     // Create a queue with capacity of 256 (must be power of 2)
-    mpmc::MPMCQueue<int, 256> queue;
+    mpmc_queue::MPMCQueue<int, 256> queue;
     
     // 入队
     // Enqueue
-    queue.try_enqueue(42);
-    queue.try_enqueue(100);
+    queue.push(42);
+    queue.push(100);
     
     // 出队
     // Dequeue
     int value;
-    if (queue.try_dequeue(value)) {
+    if (queue.pop(value)) {
         // 成功获取值
         // Successfully got value
     }
@@ -72,15 +74,15 @@ int main() {
 ### 多线程示例 (Multi-threaded Example)
 
 ```cpp
-#include <mpmc_queue.hpp>
+#include <MPMCQueue.hpp>
 #include <thread>
 
-mpmc::MPMCQueue<int, 1024> queue;
+mpmc_queue::MPMCQueue<int, 1024> queue;
 
 // 生产者线程 (Producer thread)
 void producer() {
     for (int i = 0; i < 10000; ++i) {
-        while (!queue.try_enqueue(i)) {
+        while (!queue.push(i)) {
             std::this_thread::yield();
         }
     }
@@ -89,7 +91,7 @@ void producer() {
 // 消费者线程 (Consumer thread)
 void consumer() {
     int value;
-    while (queue.try_dequeue(value)) {
+    while (queue.pop(value)) {
         // 处理值
         // Process value
     }
@@ -108,34 +110,34 @@ int main() {
 
 ## 构建 (Building)
 
-### 使用 CMake (Using CMake)
+### 使用 CMake 和 Presets (Using CMake and Presets)
 
 ```bash
-# 配置
-# Configure
-cmake -B build -DCMAKE_CXX_STANDARD=26
+# 配置 (Release)
+# Configure (Release)
+cmake --preset=release
 
 # 构建
 # Build
-cmake --build build
+cmake --build build/release
 
 # 运行测试
 # Run tests
-cd build && ctest
+cd build/release && ctest
 
 # 运行示例
 # Run examples
-./build/examples/basic_example
-./build/examples/threaded_example
+./build/release/examples/basic_example
+./build/release/examples/threaded_example
 ```
 
 ### 作为依赖项集成 (Integration as Dependency)
 
 #### 选项 1: Header-only
 
-只需将 `include/mpmc_queue.hpp` 复制到你的项目中。
+只需将 `include/MPMCQueue.hpp` 复制到你的项目中。
 
-Simply copy `include/mpmc_queue.hpp` to your project.
+Simply copy `include/MPMCQueue.hpp` to your project.
 
 #### 选项 2: CMake 子项目 (CMake Subproject)
 
@@ -147,9 +149,9 @@ target_link_libraries(your_target PRIVATE mpmc_queue)
 #### 选项 3: CMake 安装 (CMake Install)
 
 ```bash
-cmake -B build -DCMAKE_INSTALL_PREFIX=/usr/local
-cmake --build build
-sudo cmake --install build
+cmake --preset=release
+cmake --build build/release
+sudo cmake --install build/release
 ```
 
 然后在你的 CMakeLists.txt 中：
@@ -172,10 +174,16 @@ Main queue class template.
 - `T` - 队列中元素的类型 / Type of elements in the queue
 - `Capacity` - 最大元素数量（必须是 2 的幂）/ Maximum number of elements (must be power of 2)
 
+**类型定义 (Type Definitions):**
+- `value_type`
+- `size_type`
+- `reference`
+- `const_reference`
+
 **成员函数 (Member Functions):**
 
-#### `bool try_enqueue(const T& item) noexcept`
-#### `bool try_enqueue(T&& item) noexcept`
+#### `bool push(const T& item) noexcept`
+#### `bool push(T&& item) noexcept`
 
 尝试将元素入队。
 Attempt to enqueue an item.
@@ -183,7 +191,7 @@ Attempt to enqueue an item.
 **返回 (Returns):** `true` 如果成功，`false` 如果队列已满
 **Returns:** `true` if successful, `false` if queue is full
 
-#### `bool try_dequeue(T& item) noexcept`
+#### `bool pop(T& item) noexcept`
 
 尝试将元素出队。
 Attempt to dequeue an item.
@@ -194,17 +202,17 @@ Attempt to dequeue an item.
 **返回 (Returns):** `true` 如果成功，`false` 如果队列为空
 **Returns:** `true` if successful, `false` if queue is empty
 
-#### `static constexpr size_t capacity() noexcept`
+#### `static constexpr size_t max_size() noexcept`
 
 返回队列的容量。
 Returns the capacity of the queue.
 
-#### `size_t size_approx() const noexcept`
+#### `size_t size() const noexcept`
 
 返回队列的近似大小。注意：在并发场景下这只是一个近似值。
 Returns approximate size of the queue. Note: This is approximate in concurrent scenarios.
 
-#### `bool empty_approx() const noexcept`
+#### `bool empty() const noexcept`
 
 检查队列是否为空（近似）。注意：在并发场景下这只是一个近似值。
 Check if queue is empty (approximate). Note: This is approximate in concurrent scenarios.

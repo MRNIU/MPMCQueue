@@ -4,12 +4,14 @@
  * @brief Multi-threaded example demonstrating MPMC functionality
  */
 
-#include <mpmc_queue.hpp>
+#include <MPMCQueue.hpp>
 #include <iostream>
 #include <thread>
 #include <vector>
 #include <chrono>
 #include <atomic>
+
+using namespace mpmc_queue;
 
 constexpr size_t QUEUE_CAPACITY = 256;
 constexpr size_t NUM_PRODUCERS = 4;
@@ -21,7 +23,7 @@ std::atomic<size_t> total_produced{0};
 std::atomic<size_t> total_consumed{0};
 std::atomic<size_t> failed_enqueues{0};
 
-void producer(mpmc::MPMCQueue<int, QUEUE_CAPACITY>& queue, int producer_id) {
+void producer(MPMCQueue<int, QUEUE_CAPACITY>& queue, int producer_id) {
     size_t produced = 0;
     size_t failed = 0;
     
@@ -29,7 +31,7 @@ void producer(mpmc::MPMCQueue<int, QUEUE_CAPACITY>& queue, int producer_id) {
         int value = producer_id * 10000 + static_cast<int>(i);
         
         // Retry until successful
-        while (!queue.try_enqueue(value)) {
+        while (!queue.push(value)) {
             ++failed;
             std::this_thread::yield();
         }
@@ -40,14 +42,14 @@ void producer(mpmc::MPMCQueue<int, QUEUE_CAPACITY>& queue, int producer_id) {
     failed_enqueues.fetch_add(failed, std::memory_order_relaxed);
 }
 
-void consumer(mpmc::MPMCQueue<int, QUEUE_CAPACITY>& queue, 
+void consumer(MPMCQueue<int, QUEUE_CAPACITY>& queue, 
               std::atomic<bool>& done,
               [[maybe_unused]] int consumer_id) {
     size_t consumed = 0;
     int value;
     
-    while (!done.load(std::memory_order_relaxed) || !queue.empty_approx()) {
-        if (queue.try_dequeue(value)) {
+    while (!done.load(std::memory_order_relaxed) || !queue.empty()) {
+        if (queue.pop(value)) {
             ++consumed;
         } else {
             std::this_thread::yield();
@@ -66,7 +68,7 @@ int main() {
     std::cout << "Total items to produce: " << (NUM_PRODUCERS * ITEMS_PER_PRODUCER) << std::endl;
     std::cout << std::endl;
 
-    mpmc::MPMCQueue<int, QUEUE_CAPACITY> queue;
+    MPMCQueue<int, QUEUE_CAPACITY> queue;
     std::atomic<bool> done{false};
     
     std::cout << "Starting test..." << std::endl;
@@ -101,23 +103,22 @@ int main() {
     
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
-
-    std::cout << std::endl;
-    std::cout << "=== Results ===" << std::endl;
-    std::cout << "Total produced: " << total_produced.load() << std::endl;
-    std::cout << "Total consumed: " << total_consumed.load() << std::endl;
-    std::cout << "Failed enqueue attempts: " << failed_enqueues.load() << std::endl;
-    std::cout << "Final queue size (approx): " << queue.size_approx() << std::endl;
-    std::cout << "Time elapsed: " << duration.count() << " ms" << std::endl;
     
-    if (total_produced.load() == total_consumed.load() && 
-        total_produced.load() == NUM_PRODUCERS * ITEMS_PER_PRODUCER) {
-        std::cout << std::endl;
-        std::cout << "✓ SUCCESS: All items were produced and consumed correctly!" << std::endl;
-        return 0;
+    std::cout << "All consumers finished" << std::endl;
+    std::cout << std::endl;
+    
+    std::cout << "=== Statistics ===" << std::endl;
+    std::cout << "Total produced: " << total_produced << std::endl;
+    std::cout << "Total consumed: " << total_consumed << std::endl;
+    std::cout << "Failed enqueues (retries): " << failed_enqueues << std::endl;
+    std::cout << "Time taken: " << duration.count() << " ms" << std::endl;
+    
+    if (total_produced == total_consumed && total_produced == NUM_PRODUCERS * ITEMS_PER_PRODUCER) {
+        std::cout << "SUCCESS: Produced and consumed counts match!" << std::endl;
     } else {
-        std::cout << std::endl;
-        std::cout << "✗ ERROR: Mismatch in produced/consumed items!" << std::endl;
+        std::cout << "FAILURE: Counts do not match!" << std::endl;
         return 1;
     }
+    
+    return 0;
 }

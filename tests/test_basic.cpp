@@ -7,6 +7,7 @@
 #include <mpmc_queue.hpp>
 #include <iostream>
 #include <cassert>
+#include <utility>
 
 // Simple test framework macros
 #define TEST_ASSERT(condition, message) \

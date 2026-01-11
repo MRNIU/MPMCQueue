@@ -7,16 +7,6 @@
   },
   "configurePresets": [
     {
-      "name": "host",
-      "description": "Linux Only",
-      "hidden": true,
-      "condition": {
-        "type": "equals",
-        "lhs": "${hostSystemName}",
-        "rhs": "Linux"
-      }
-    },
-    {
       "name": "std",
       "description": "This preset makes sure the project actually builds with at least the specified standard",
       "hidden": true,
@@ -33,14 +23,14 @@
       "name": "configurePresets_base",
       "hidden": true,
       "inherits": [
-        "host",
         "std"
       ],
+      "condition": true,
       "displayName": "configurePresets_base",
       "description": "base configurePresets",
       "generator": "Unix Makefiles",
       "toolchainFile": "",
-      "binaryDir": "",
+      "binaryDir": "${sourceDir}/build",
       "installDir": "",
       "cacheVariables": {
         "CMAKE_VERBOSE_MAKEFILE": {
@@ -49,48 +39,30 @@
         },
         "CMAKE_EXPORT_COMPILE_COMMANDS": {
           "type": "BOOL",
-          "value": "TRUE"
+          "value": "ON"
+        },
+        "CMAKE_BUILD_TYPE": {
+          "type": "STRING",
+          "value": "Release"
+        },
+        "EXECUTABLE_OUTPUT_PATH": {
+          "type": "STRING",
+          "value": "${sourceDir}/build/bin"
+        },
+        "LIBRARY_OUTPUT_PATH": {
+          "type": "STRING",
+          "value": "${sourceDir}/build/lib"
         }
       }
     },
     {
-      "name": "debug",
-      "inherits": "configurePresets_base",
-      "displayName": "debug",
-      "description": "debug build",
-      "binaryDir": "${sourceDir}/build/debug",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug"
-      }
-    },
-    {
-      "name": "release",
-      "inherits": "configurePresets_base",
-      "displayName": "release",
-      "description": "release build",
-      "binaryDir": "${sourceDir}/build/release",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release"
-      }
-    }
-  ],
-  "buildPresets": [
-    {
-      "name": "debug",
-      "configurePreset": "debug"
-    },
-    {
-      "name": "release",
-      "configurePreset": "release"
-    }
-  ],
-  "testPresets": [
-    {
-      "name": "debug",
-      "configurePreset": "debug",
-      "output": {
-        "outputOnFailure": true
-      }
+      "name": "build",
+      "hidden": false,
+      "inherits": [
+        "configurePresets_base"
+      ],
+      "displayName": "build",
+      "description": "build"
     }
   ]
 }

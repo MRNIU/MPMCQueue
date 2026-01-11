@@ -7,41 +7,14 @@ project(MPMCQueue
     LANGUAGES CXX
 )
 
-# Header-only library interface
-add_library(mpmc_queue INTERFACE)
-target_include_directories(mpmc_queue INTERFACE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
-)
-
-target_compile_options(mpmc_queue INTERFACE
-    -Wall
-    -Wextra
-    -Wpedantic
-    -Werror
-)
-
-# Freestanding environment flags (optional, can be enabled if needed)
-option(MPMC_FREESTANDING "Enable freestanding environment mode" OFF)
-if(MPMC_FREESTANDING)
-    target_compile_options(mpmc_queue INTERFACE
-        -ffreestanding
-        -fno-exceptions
-        -fno-rtti
+if (${PROJECT_SOURCE_DIR} STREQUAL ${PROJECT_BINARY_DIR})
+    message(
+            FATAL_ERROR
+            "In-source builds not allowed. Please make a new directory (called a build directory) and run CMake from there."
     )
-endif()
+endif ()
 
-# Option to build examples
-option(MPMC_BUILD_EXAMPLES "Build example programs" ON)
+ADD_LIBRARY (${PROJECT_NAME} INTERFACE)
+TARGET_INCLUDE_DIRECTORIES (${PROJECT_NAME} INTERFACE include)
 
-if(MPMC_BUILD_EXAMPLES)
-    add_subdirectory(examples)
-endif()
-
-# Option to build tests
-option(MPMC_BUILD_TESTS "Build test programs" ON)
-
-if(MPMC_BUILD_TESTS)
-    enable_testing()
-    add_subdirectory(tests)
-endif()
+add_subdirectory(${PROJECT_SOURCE_DIR}/test)

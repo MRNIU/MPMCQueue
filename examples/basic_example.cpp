@@ -18,11 +18,11 @@ int main() {
 
     // Enqueue some items
     std::cout << "Enqueuing items: 10, 20, 30, 40, 50" << std::endl;
-    queue.try_enqueue(10);
-    queue.try_enqueue(20);
-    queue.try_enqueue(30);
-    queue.try_enqueue(40);
-    queue.try_enqueue(50);
+    [[maybe_unused]] bool r1 = queue.try_enqueue(10);
+    [[maybe_unused]] bool r2 = queue.try_enqueue(20);
+    [[maybe_unused]] bool r3 = queue.try_enqueue(30);
+    [[maybe_unused]] bool r4 = queue.try_enqueue(40);
+    [[maybe_unused]] bool r5 = queue.try_enqueue(50);
     
     std::cout << "Size after enqueue: " << queue.size_approx() << std::endl;
     std::cout << "Is empty? " << (queue.empty_approx() ? "Yes" : "No") << std::endl;

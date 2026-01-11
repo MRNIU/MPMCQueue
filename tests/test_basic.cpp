@@ -87,8 +87,8 @@ int main() {
         
         TEST_ASSERT(!queue.try_dequeue(value), "Dequeue should fail on empty queue");
         
-        queue.try_enqueue(42);
-        queue.try_dequeue(value);
+        [[maybe_unused]] bool enqueued = queue.try_enqueue(42);
+        [[maybe_unused]] bool dequeued = queue.try_dequeue(value);
         
         TEST_ASSERT(!queue.try_dequeue(value), "Dequeue should fail after emptying queue");
         TEST_PASS("Queue empty condition");

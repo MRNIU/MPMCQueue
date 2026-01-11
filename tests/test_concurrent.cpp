@@ -29,7 +29,6 @@ int main() {
     // Test 1: Single producer, single consumer
     {
         mpmc::MPMCQueue<int, 256> queue;
-        std::atomic<bool> done{false};
         constexpr size_t NUM_ITEMS = 10000;
         
         std::thread producer([&]() {
@@ -45,8 +44,10 @@ int main() {
             int value;
             while (count < NUM_ITEMS) {
                 if (queue.try_dequeue(value)) {
-                    TEST_ASSERT(value == static_cast<int>(count), 
-                               "Value should match expected sequence");
+                    if (value != static_cast<int>(count)) {
+                        std::cerr << "FAIL: Value should match expected sequence" << std::endl;
+                        std::cerr << "  at " << __FILE__ << ":" << __LINE__ << std::endl;
+                    }
                     ++count;
                 } else {
                     std::this_thread::yield();

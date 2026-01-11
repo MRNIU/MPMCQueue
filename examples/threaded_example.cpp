@@ -42,7 +42,7 @@ void producer(mpmc::MPMCQueue<int, QUEUE_CAPACITY>& queue, int producer_id) {
 
 void consumer(mpmc::MPMCQueue<int, QUEUE_CAPACITY>& queue, 
               std::atomic<bool>& done,
-              int consumer_id) {
+              [[maybe_unused]] int consumer_id) {
     size_t consumed = 0;
     int value;
     

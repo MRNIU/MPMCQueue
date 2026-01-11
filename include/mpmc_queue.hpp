@@ -38,7 +38,7 @@ public:
      */
     constexpr MPMCQueue() noexcept : head_(0), tail_(0) {
         for (size_t i = 0; i < Capacity; ++i) {
-            sequences_[i].store(i, std::memory_order_relaxed);
+            buffer_[i].sequence.store(i, std::memory_order_relaxed);
         }
     }
 
@@ -182,9 +182,6 @@ private:
     
     alignas(kCacheLineSize) std::atomic<size_t> head_;
     alignas(kCacheLineSize) std::atomic<size_t> tail_;
-    
-    // Array of sequence numbers to track cell states
-    alignas(kCacheLineSize) std::atomic<size_t> sequences_[Capacity];
     
     // Ring buffer
     alignas(kCacheLineSize) Cell buffer_[Capacity];

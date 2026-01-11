@@ -6,10 +6,16 @@ project(MPMCQueue
     LANGUAGES CXX
 )
 
-# Set C++26 standard
+# Set C++ standard (try C++26, fall back to C++23)
+# C++26 is the target, but not all compilers support it yet
 set(CMAKE_CXX_STANDARD 26)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD_REQUIRED OFF)
 set(CMAKE_CXX_EXTENSIONS OFF)
+
+# If C++26 is not available, try C++23
+if(NOT CMAKE_CXX_STANDARD EQUAL 26)
+    set(CMAKE_CXX_STANDARD 23)
+endif()
 
 # Export compile commands for IDE support
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
